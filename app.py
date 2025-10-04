@@ -579,6 +579,18 @@ def main():
     
     # Search filter (auto-search as you type)
     st.sidebar.markdown("🔍 **Search Products**")
+    
+    # Add CSS to hide the "Press Enter to apply" text
+    st.markdown("""
+    <style>
+    .stTextInput > div > div > div > div > small,
+    .stTextInput small,
+    [data-testid="stTextInput"] small {
+        display: none !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     search_term = st.sidebar.text_input(
         "Search Products", 
         placeholder="Enter product name...", 
