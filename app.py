@@ -509,7 +509,7 @@ def save_product_note(product_id: str, note: str) -> None:
     except Exception as e:
         st.error(f"Error saving note: {e}")
 
-def is_authorized_user():
+def check_note_authorization():
     """Check if the current user is authorized to edit notes."""
     # Simple password protection for note editing
     if 'note_password_entered' not in st.session_state:
@@ -518,8 +518,8 @@ def is_authorized_user():
     if not st.session_state.note_password_entered:
         with st.sidebar:
             st.markdown("### 🔐 Note Editing")
-            password = st.text_input("Enter password to edit notes:", type="password")
-            if st.button("Unlock Notes"):
+            password = st.text_input("Enter password to edit notes:", type="password", key="note_password_input")
+            if st.button("Unlock Notes", key="unlock_notes_button"):
                 if password == "pratham2024":  # Simple password - you can change this
                     st.session_state.note_password_entered = True
                     st.success("Notes unlocked!")
@@ -693,6 +693,9 @@ def main():
             # Load product notes
             product_notes = load_product_notes()
             
+            # Check note editing authorization (once, outside the loop)
+            is_authorized = check_note_authorization()
+            
             # Create product cards
             st.markdown('<div class="product-grid">', unsafe_allow_html=True)
             
@@ -705,7 +708,7 @@ def main():
                 current_note = product_notes.get(product_id, "")
                 
                 # Only show note editing interface to authorized users
-                if is_authorized_user():
+                if is_authorized:
                     with st.expander(f"✏️ Add Note for: {product['product_name'][:50]}...", expanded=False):
                         new_note = st.text_area(
                             "Your reflection on this purchase:",
