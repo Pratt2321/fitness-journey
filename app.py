@@ -683,30 +683,7 @@ def main():
                 card_html = create_product_card(product, image_cache, product_notes)
                 st.markdown(card_html, unsafe_allow_html=True)
                 
-                # Add note editing functionality
-                product_id = f"{product.get('asin', '')}_{product.get('order_date', '')}"
-                current_note = product_notes.get(product_id, "")
-                
-                # Note editing interface (always available)
-                with st.expander(f"✏️ Add Note for: {product['product_name'][:50]}...", expanded=False):
-                    new_note = st.text_area(
-                        "Your reflection on this purchase:",
-                        value=current_note,
-                        height=100,
-                        key=f"note_{product_id}"
-                    )
-                    
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        if st.button("💾 Save Note", key=f"save_{product_id}"):
-                            save_product_note(product_id, new_note)
-                            st.success("Note saved!")
-                            st.rerun()
-                    with col2:
-                        if st.button("🗑️ Clear Note", key=f"clear_{product_id}"):
-                            save_product_note(product_id, "")
-                            st.success("Note cleared!")
-                            st.rerun()
+                # Notes are managed via product_notes.json file
             
             st.markdown('</div>', unsafe_allow_html=True)
     
