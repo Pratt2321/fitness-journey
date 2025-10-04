@@ -282,7 +282,7 @@ def get_journey_stage_color(stage: str) -> str:
         return "#6B7280"  # Gray
 
 @st.cache_data
-def filter_gym_products(df: pd.DataFrame) -> pd.DataFrame:
+def filter_gym_products(df: pd.DataFrame, cache_version: str = "v2") -> pd.DataFrame:
     """Filter the dataframe to only include Pratham's fitness journey products."""
     if df.empty:
         return df
@@ -556,7 +556,7 @@ def main():
         return
     
     # Filter gym products
-    gym_df = filter_gym_products(df)
+    gym_df = filter_gym_products(df, "v2")
     
     if gym_df.empty:
         st.warning("🏃‍♂️ No gym-related products found in your order history. Try adjusting the keyword filters.")
