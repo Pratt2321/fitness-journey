@@ -509,26 +509,7 @@ def save_product_note(product_id: str, note: str) -> None:
     except Exception as e:
         st.error(f"Error saving note: {e}")
 
-def check_note_authorization():
-    """Check if the current user is authorized to edit notes."""
-    # Simple password protection for note editing
-    if 'note_password_entered' not in st.session_state:
-        st.session_state.note_password_entered = False
-    
-    if not st.session_state.note_password_entered:
-        with st.sidebar:
-            st.markdown("### 🔐 Note Editing")
-            password = st.text_input("Enter password to edit notes:", type="password", key="note_password_input")
-            if st.button("Unlock Notes", key="unlock_notes_button"):
-                if password == "pratham2024":  # Simple password - you can change this
-                    st.session_state.note_password_entered = True
-                    st.success("Notes unlocked!")
-                    st.rerun()
-                else:
-                    st.error("Incorrect password")
-        return False
-    
-    return True
+# Note editing is now always available - you can edit product_notes.json directly
 
 def main():
     """Main Streamlit application."""
@@ -693,8 +674,7 @@ def main():
             # Load product notes
             product_notes = load_product_notes()
             
-            # Check note editing authorization (once, outside the loop)
-            is_authorized = check_note_authorization()
+            # Note editing is always available
             
             # Create product cards
             st.markdown('<div class="product-grid">', unsafe_allow_html=True)
@@ -703,35 +683,30 @@ def main():
                 card_html = create_product_card(product, image_cache, product_notes)
                 st.markdown(card_html, unsafe_allow_html=True)
                 
-                # Add note editing functionality (only for authorized users)
+                # Add note editing functionality
                 product_id = f"{product.get('asin', '')}_{product.get('order_date', '')}"
                 current_note = product_notes.get(product_id, "")
                 
-                # Only show note editing interface to authorized users
-                if is_authorized:
-                    with st.expander(f"✏️ Add Note for: {product['product_name'][:50]}...", expanded=False):
-                        new_note = st.text_area(
-                            "Your reflection on this purchase:",
-                            value=current_note,
-                            height=100,
-                            key=f"note_{product_id}"
-                        )
-                        
-                        col1, col2 = st.columns([1, 4])
-                        with col1:
-                            if st.button("💾 Save Note", key=f"save_{product_id}"):
-                                save_product_note(product_id, new_note)
-                                st.success("Note saved!")
-                                st.rerun()
-                        with col2:
-                            if st.button("🗑️ Clear Note", key=f"clear_{product_id}"):
-                                save_product_note(product_id, "")
-                                st.success("Note cleared!")
-                                st.rerun()
-                else:
-                    # Show read-only view for non-authorized users
-                    if current_note:
-                        st.info(f"💬 Reflection: {current_note}")
+                # Note editing interface (always available)
+                with st.expander(f"✏️ Add Note for: {product['product_name'][:50]}...", expanded=False):
+                    new_note = st.text_area(
+                        "Your reflection on this purchase:",
+                        value=current_note,
+                        height=100,
+                        key=f"note_{product_id}"
+                    )
+                    
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        if st.button("💾 Save Note", key=f"save_{product_id}"):
+                            save_product_note(product_id, new_note)
+                            st.success("Note saved!")
+                            st.rerun()
+                    with col2:
+                        if st.button("🗑️ Clear Note", key=f"clear_{product_id}"):
+                            save_product_note(product_id, "")
+                            st.success("Note cleared!")
+                            st.rerun()
             
             st.markdown('</div>', unsafe_allow_html=True)
     
