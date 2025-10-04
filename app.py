@@ -264,7 +264,7 @@ def get_journey_stage(product_name: str, order_date: pd.Timestamp) -> str:
     elif year == 2024:
         return "🛠️ Equipment & Recovery (2024)"
     elif year == 2025:
-        return "🥤 Nutrition & Advanced Training (2025)"
+        return "🥤 Nutrition & Training (2025)"
     else:
         return f"Fitness Journey ({year})"
 
@@ -578,11 +578,13 @@ def main():
     )
     
     # Search filter (auto-search as you type)
+    st.sidebar.markdown("🔍 **Search Products**")
     search_term = st.sidebar.text_input(
-        "🔍 Search Products", 
+        "Search Products", 
         placeholder="Enter product name...", 
         key="search_input",
-        help="Search automatically as you type"
+        help="Search automatically as you type",
+        label_visibility="collapsed"
     )
     
     # Apply filters using cached function for better performance
@@ -644,7 +646,7 @@ def main():
                 ("🏗️ Foundation (2022)", ""),
                 ("💪 Building Strength (2023)", ""),
                 ("🛠️ Equipment & Recovery (2024)", ""),
-                ("🥤 Nutrition & Advanced Training (2025)", "")
+                ("🥤 Nutrition & Training (2025)", "")
             ]
             
             for i, (stage, description) in enumerate(stages):
