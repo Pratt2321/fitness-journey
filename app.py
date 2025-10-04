@@ -538,7 +538,7 @@ def main():
     <div class="main-header">
         <h1>💪 My Fitness Journey — Through Amazon Orders</h1>
         <p>From AirPods Pro to Creatine: 4 Years of Transformation (2022-2025)</p>
-        <p style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">15 key purchases that tell the story of my fitness evolution</p>
+        <p style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">16 key purchases that tell the story of my fitness evolution</p>
     </div>
     """, unsafe_allow_html=True)
     
