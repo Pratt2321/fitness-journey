@@ -655,13 +655,19 @@ def main():
             
             col1, col2, col3, col4 = st.columns(4)
             
-            # Get the actual journey stages from the data, sorted by year
-            actual_stages = journey_stages.sort_values('journey_stage').values.tolist()
+            # Define the 4 journey stages in order
+            stages = [
+                "🏗️ Foundation (2022)",
+                "💪 Building Strength (2023)", 
+                "🛠️ Equipment & Recovery (2024)",
+                "🥤 Nutrition & Training (2025)"
+            ]
             
-            for i, (stage, count) in enumerate(actual_stages):
-                if i < 4:  # Only show first 4 stages
-                    with [col1, col2, col3, col4][i]:
-                        stage_color = get_journey_stage_color(stage)
+            for i, stage in enumerate(stages):
+                with [col1, col2, col3, col4][i]:
+                    # Get count for this stage from the data
+                    count = journey_stages[journey_stages['journey_stage'] == stage]['count'].iloc[0] if stage in journey_stages['journey_stage'].values else 0
+                    stage_color = get_journey_stage_color(stage)
                     st.markdown(f"""
                     <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border-left: 4px solid {stage_color}; margin-bottom: 1rem;">
                         <h4 style="margin: 0 0 0.5rem 0; color: #1f2937;">{stage}</h4>
