@@ -55,8 +55,8 @@ Thumbs.db
 # Image cache
 image_cache.json
 
-# User notes
-product_notes.json
+# User notes (commented out to allow deployment)
+# product_notes.json
 
 # Data files (keep example but ignore personal data)
 *.csv
