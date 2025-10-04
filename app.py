@@ -511,6 +511,23 @@ def save_product_note(product_id: str, note: str) -> None:
 
 # Note editing is now always available - you can edit product_notes.json directly
 
+@st.cache_data
+def filter_products(df: pd.DataFrame, search_term: str, year_range: tuple) -> pd.DataFrame:
+    """Cached function to filter products by search term and year range."""
+    if search_term:
+        mask = df['product_name'].str.contains(search_term, case=False, na=False)
+        filtered = df[mask]
+    else:
+        filtered = df
+    
+    # Apply year filter
+    filtered = filtered[
+        (filtered['year'] >= year_range[0]) & 
+        (filtered['year'] <= year_range[1])
+    ]
+    
+    return filtered
+
 def main():
     """Main Streamlit application."""
     
@@ -560,19 +577,16 @@ def main():
         step=1
     )
     
-    # Search filter
-    search_term = st.sidebar.text_input("🔍 Search Products", placeholder="Enter product name...")
+    # Search filter (auto-search as you type)
+    search_term = st.sidebar.text_input(
+        "🔍 Search Products", 
+        placeholder="Enter product name...", 
+        key="search_input",
+        help="Search automatically as you type"
+    )
     
-    # Apply filters
-    filtered_df = gym_df[
-        (gym_df['year'] >= year_range[0]) & 
-        (gym_df['year'] <= year_range[1])
-    ].copy()
-    
-    if search_term:
-        filtered_df = filtered_df[
-            filtered_df['product_name'].str.contains(search_term, case=False, na=False)
-        ]
+    # Apply filters using cached function for better performance
+    filtered_df = filter_products(gym_df, search_term, year_range)
     
     # Stats cards
     col1, col2, col3, col4 = st.columns(4)
