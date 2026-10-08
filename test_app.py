@@ -1,11 +1,17 @@
 """
 Test script for the My Gym Journey Streamlit app.
-Run this to verify the app works correctly before deployment.
+Verifies data processing, curated dataset schema, local images, and fallback handling.
 """
 
-import pandas as pd
 import os
-from app import load_and_process_data, filter_gym_products, is_gym_related
+import json
+from app import (
+    load_and_process_data, 
+    filter_gym_products, 
+    is_gym_related,
+    load_curated_dataset,
+    get_product_image_src
+)
 
 def test_data_loading():
     """Test if the CSV file can be loaded and processed."""
@@ -28,7 +34,6 @@ def test_gym_filtering():
     """Test the gym product filtering logic."""
     print("Testing gym product filtering...")
     
-    # Test individual product names
     test_products = [
         "RXBAR Protein Bars, Protein Snack, Snack Bars, Variety Pack",
         "Orgain Organic Vegan Protein Powder, Vanilla Bean",
@@ -55,13 +60,11 @@ def test_full_pipeline():
         print(f"ERROR: CSV file '{csv_file}' not found!")
         return False
     
-    # Load and process data
     df = load_and_process_data(csv_file)
     if df.empty:
         print("ERROR: No data loaded!")
         return False
     
-    # Filter gym products
     gym_df = filter_gym_products(df)
     if gym_df.empty:
         print("ERROR: No gym products found!")
@@ -73,6 +76,59 @@ def test_full_pipeline():
     
     return True
 
+def test_curated_dataset():
+    """Test that curated dataset loads with all required schema fields and reflections."""
+    print("Testing curated dataset schema & reflections...")
+    items = load_curated_dataset()
+    if not items or len(items) != 16:
+        print(f"ERROR: Expected 16 items, got {len(items) if items else 0}")
+        return False
+
+    required_keys = ["id", "product_name", "purchase_date", "year", "category", "price", "asin", "image_path", "reflection"]
+    for idx, item in enumerate(items):
+        for k in required_keys:
+            if k not in item:
+                print(f"ERROR: Item {idx} missing key '{k}'")
+                return False
+        if not item["reflection"].strip():
+            print(f"ERROR: Item {item['id']} has empty reflection")
+            return False
+
+    print(f"SUCCESS: Curated dataset has all 16 items with complete schema and reflections")
+    return True
+
+def test_local_images():
+    """Test that all local product images exist and have valid file sizes."""
+    print("Testing local image assets...")
+    items = load_curated_dataset()
+    for item in items:
+        path = item.get("image_path", "")
+        if not os.path.exists(path):
+            print(f"ERROR: Image file not found: {path} for {item.get('asin')}")
+            return False
+        if os.path.getsize(path) < 1000:
+            print(f"ERROR: Image file too small (< 1KB): {path}")
+            return False
+        
+        # Test encoding
+        src = get_product_image_src(path, item.get("product_name", ""))
+        if not src.startswith("data:image/"):
+            print(f"ERROR: Expected data URI for {path}, got {src[:30]}")
+            return False
+
+    print(f"SUCCESS: All {len(items)} local image assets exist and encode cleanly")
+    return True
+
+def test_missing_image_fallback():
+    """Test that missing images gracefully return an SVG data URI instead of crashing."""
+    print("Testing missing image fallback resilience...")
+    src = get_product_image_src("non_existent_file.jpg", "Test Dumbbell")
+    if not src.startswith("data:image/svg+xml"):
+        print(f"ERROR: Expected SVG placeholder for missing file, got {src[:30]}")
+        return False
+    print("SUCCESS: Missing image gracefully rendered as clean SVG placeholder")
+    return True
+
 def main():
     """Run all tests."""
     print("Starting My Gym Journey App Tests\n")
@@ -80,7 +136,10 @@ def main():
     tests = [
         ("Data Loading", test_data_loading),
         ("Gym Filtering", test_gym_filtering),
-        ("Full Pipeline", test_full_pipeline)
+        ("Full Pipeline", test_full_pipeline),
+        ("Curated Dataset", test_curated_dataset),
+        ("Local Image Assets", test_local_images),
+        ("Missing Image Fallback", test_missing_image_fallback)
     ]
     
     passed = 0

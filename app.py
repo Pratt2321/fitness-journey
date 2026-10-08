@@ -1,262 +1,321 @@
 """
-My Gym Journey — Through Amazon Orders
-A Streamlit web app for visualizing fitness evolution through Amazon purchase data.
+From AirPods Pro to Creatine: 4 Years of Transformation (2022–2025)
+An Editorial Fitness Journey Case Study
 
-Author: Pratham Pradhan
-Tech Stack: Streamlit, pandas, Amazon PA-API v5, matplotlib/plotly
+Author: Pratham Pradhan (prathampradhan.dev)
+Tech Stack: Streamlit, Pandas, Local Image Pipeline
 """
 
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from datetime import datetime, timedelta
-import re
+from datetime import datetime
+import json
 import os
+import base64
+import urllib.parse
 from typing import List, Dict, Optional
-import requests
-from dotenv import load_dotenv
 
-# Import our custom Rainforest API helper
-try:
-    from rainforest_api import RainforestAPI
-except ImportError:
-    st.warning("⚠️ Rainforest API helper not found. Product images will use placeholders.")
-    RainforestAPI = None
-
-# Page configuration
+# ==============================================================================
+# Page Configuration
+# ==============================================================================
 st.set_page_config(
-    page_title="My Gym Journey — Through Amazon Orders",
-    page_icon="💪",
+    page_title="From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression",
+    page_icon="⚡",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Load environment variables
-load_dotenv()
-
-# Custom CSS for portfolio-ready design
+# ==============================================================================
+# Editorial Design System & Styling
+# ==============================================================================
 st.markdown("""
 <style>
-    /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    /* Global styles */
-    .main {
-        font-family: 'Inter', sans-serif;
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap');
+
+    /* Global Dark Canvas */
+    .stApp {
+        background-color: #080b11;
+        color: #e2e8f0;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Completely hide Streamlit sidebar and extra margins */
+    [data-testid="stSidebar"], section[data-testid="stSidebar"] {
+        display: none !important;
     }
     
-    /* Header styling */
-    .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem 0;
-        border-radius: 10px;
-        margin-bottom: 2rem;
+    header[data-testid="stHeader"] {
+        background: transparent;
+    }
+
+    .main .block-container {
+        max-width: 1040px;
+        padding-top: 2rem;
+        padding-bottom: 5rem;
+        margin: 0 auto;
+    }
+
+    /* Editorial Hero Section */
+    .editorial-hero {
+        padding: 3.5rem 0 3rem 0;
         text-align: center;
-        color: white;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 3.5rem;
     }
-    
-    .main-header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .main-header p {
-        font-size: 1.1rem;
-        margin: 0.5rem 0 0 0;
-        opacity: 0.9;
-    }
-    
-    /* Card styling */
-    .product-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .product-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-    
-    .product-image {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-    }
-    
-    .product-title {
-        font-size: 1.1rem;
+
+    .hero-kicker {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
         font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 0.5rem;
-        line-height: 1.4;
-    }
-    
-    .product-price {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #059669;
-        margin-bottom: 0.5rem;
-    }
-    
-    .product-date {
-        font-size: 0.9rem;
-        color: #6b7280;
-        margin-bottom: 1rem;
-    }
-    
-    .product-note {
-        background: #f9fafb;
-        padding: 0.75rem;
-        border-radius: 6px;
-        border-left: 3px solid #3b82f6;
-        font-size: 0.9rem;
-        color: #374151;
-    }
-    
-    /* Stats cards */
-    .stat-card {
-        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-        padding: 1.5rem;
-        border-radius: 10px;
-        text-align: center;
-        border: 1px solid #d1d5db;
-    }
-    
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0;
-    }
-    
-    .stat-label {
-        font-size: 0.9rem;
-        color: #6b7280;
-        margin: 0.5rem 0 0 0;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        color: #38bdf8;
+        margin-bottom: 1.25rem;
     }
-    
-    /* Filter styling */
-    .filter-section {
-        background: #f8fafc;
-        padding: 1.5rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-        border: 1px solid #e2e8f0;
+
+    .editorial-hero h1 {
+        font-size: clamp(2.4rem, 5vw, 3.8rem);
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: -0.035em;
+        line-height: 1.15;
+        margin: 0 0 1.25rem 0;
     }
-    
-    /* Section headers */
-    .section-header {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #1f2937;
-        margin: 2rem 0 1rem 0;
+
+    .editorial-hero p.narrative-lead {
+        font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+        color: #94a3b8;
+        max-width: 760px;
+        margin: 0 auto 1.75rem auto;
+        line-height: 1.7;
+        font-weight: 400;
+    }
+
+    .hero-byline {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-    }
-    
-    /* Loading animation */
-    .loading {
-        display: flex;
         justify-content: center;
-        align-items: center;
-        padding: 2rem;
-    }
-    
-    /* Responsive grid */
-    .product-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 1.5rem;
-        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #64748b;
     }
-    
-    /* Mobile responsiveness */
-    @media (max-width: 768px) {
-        .product-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .main-header h1 {
-            font-size: 2rem;
-        }
+
+    .hero-byline a {
+        color: #cbd5e1;
+        text-decoration: none;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 1px;
+        transition: all 0.15s ease;
     }
+
+    .hero-byline a:hover {
+        color: #38bdf8;
+        border-bottom-color: #38bdf8;
+    }
+
+    /* Chapter Section Styling */
+    .chapter-container {
+        margin: 4.5rem 0 2rem 0;
+    }
+
+    .chapter-meta {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .chapter-number {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #38bdf8;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .chapter-heading {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #f8fafc;
+        letter-spacing: -0.025em;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .chapter-theme {
+        font-size: 1.05rem;
+        color: #94a3b8;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+
+    .chapter-essay {
+        font-size: 1.02rem;
+        color: #cbd5e1;
+        line-height: 1.75;
+        max-width: 860px;
+        margin-bottom: 2.25rem;
+    }
+
+    /* Product Card Editorial Grid */
+    .product-grid-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.75rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .editorial-card {
+        background: #0e131f;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 14px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
+    }
+
+    .editorial-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(255, 255, 255, 0.18);
+        box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.6);
+    }
+
+    .editorial-card a.img-link {
+        display: block;
+        text-decoration: none;
+        width: 100%;
+        margin-bottom: 1.25rem;
+    }
+
+    .editorial-card .img-frame {
+        width: 100%;
+        height: 210px;
+        background: #07090f;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        overflow: hidden;
+    }
+
+    .editorial-card .img-frame img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+        transition: transform 0.3s ease;
+    }
+
+    .editorial-card:hover .img-frame img {
+        transform: scale(1.04);
+    }
+
+    .editorial-card a.title-link {
+        font-size: 1.12rem;
+        font-weight: 700;
+        color: #f8fafc;
+        text-decoration: none;
+        line-height: 1.4;
+        margin: 0 0 0.4rem 0;
+        display: inline-block;
+        transition: color 0.15s ease;
+    }
+
+    .editorial-card a.title-link:hover {
+        color: #38bdf8;
+    }
+
+    .card-date {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        color: #64748b;
+        margin-bottom: 1.1rem;
+    }
+
+    .card-reflection-block {
+        margin-top: auto;
+        background: rgba(15, 23, 42, 0.6);
+        border-left: 2px solid #38bdf8;
+        padding: 0.9rem 1rem;
+        border-radius: 0 8px 8px 0;
+        font-family: 'Newsreader', Georgia, serif;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: #cbd5e1;
+        font-style: italic;
+    }
+
+    /* Chapter Accents */
+    .c-2022 .chapter-number, .c-2022 a.title-link:hover { color: #38bdf8; }
+    .c-2022 .card-reflection-block { border-left-color: #38bdf8; }
+
+    .c-2023 .chapter-number, .c-2023 a.title-link:hover { color: #34d399; }
+    .c-2023 .card-reflection-block { border-left-color: #34d399; }
+
+    .c-2024 .chapter-number, .c-2024 a.title-link:hover { color: #fbbf24; }
+    .c-2024 .card-reflection-block { border-left-color: #fbbf24; }
+
+    .c-2025 .chapter-number, .c-2025 a.title-link:hover { color: #fb7185; }
+    .c-2025 .card-reflection-block { border-left-color: #fb7185; }
 </style>
 """, unsafe_allow_html=True)
 
+
+# ==============================================================================
+# Backward-Compatible Data Processing Functions
+# (Kept intact for test_app.py and raw CSV compatibility)
+# ==============================================================================
 @st.cache_data
 def load_and_process_data(file_path: str) -> pd.DataFrame:
     """Load and process the Amazon order history CSV file."""
     try:
         df = pd.read_csv(file_path)
-        
-        # Clean column names
         df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
-        
-        # Convert order date to datetime
         df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce')
-        
-        # Extract year for filtering
         df['year'] = df['order_date'].dt.year
-        
-        # Clean price data
         df['unit_price'] = pd.to_numeric(df['unit_price'], errors='coerce')
         df['total_owed'] = pd.to_numeric(df['total_owed'], errors='coerce')
-        
-        # Filter out cancelled orders
         df = df[df['order_status'] == 'Closed']
-        
         return df
     except Exception as e:
-        st.error(f"Error loading data: {str(e)}")
+        st.error(f"Error loading CSV data: {str(e)}")
         return pd.DataFrame()
+
 
 def is_gym_related(product_name: str) -> bool:
     """Check if a product is part of Pratham's specific fitness journey."""
     if pd.isna(product_name):
         return False
     
-    # Pratham's specific fitness journey items (2022-2025)
     journey_items = [
         # 2022 - Foundation
         'airpods pro', 'teclor push up bar',
-        
         # 2023 - Building Strength
         'grip strength', 'headband', 'gshock', 'g-shock',
-        
         # 2024 - Equipment & Recovery
-        'replacement ear tips', 'polislime', 'anti slip soft ear tips', 'noise reduction hole', 'silicone eartips', 'elbow brace', 'dip belt', 'ninja fit compact personal blender', 'body fat scale', 'scale',
-        
+        'replacement ear tips', 'polislime', 'anti slip soft ear tips', 
+        'noise reduction hole', 'silicone eartips', 'elbow brace', 
+        'dip belt', 'ninja fit compact personal blender', 'body fat scale', 'scale',
         # 2025 - Nutrition & Training
         'orgain', 'pure protein bars', 'creatine', 'rxbar', 'rx bar',
         'wrist wraps', 'knee sleeves'
     ]
-    
     product_lower = product_name.lower()
     return any(item in product_lower for item in journey_items)
+
 
 def get_journey_stage(product_name: str, order_date: pd.Timestamp) -> str:
     """Determine which stage of the fitness journey this product represents."""
     if pd.isna(product_name) or pd.isna(order_date):
         return "Unknown"
     
-    product_lower = product_name.lower()
-    year = order_date.year
-    
-    # Use the actual purchase year to determine the stage
+    year = order_date.year if hasattr(order_date, 'year') else pd.to_datetime(order_date).year
     if year == 2022:
         return "🏗️ Foundation (2022)"
     elif year == 2023:
@@ -265,50 +324,41 @@ def get_journey_stage(product_name: str, order_date: pd.Timestamp) -> str:
         return "🛠️ Equipment & Recovery (2024)"
     elif year == 2025:
         return "🥤 Nutrition & Training (2025)"
-    else:
-        return f"Fitness Journey ({year})"
+    return f"Fitness Journey ({year})"
+
 
 def get_journey_stage_color(stage: str) -> str:
     """Get color for each journey stage."""
-    if "2022" in stage:
-        return "#3B82F6"  # Blue
-    elif "2023" in stage:
-        return "#10B981"  # Green
-    elif "2024" in stage:
-        return "#F59E0B"  # Yellow/Orange
-    elif "2025" in stage:
-        return "#EF4444"  # Red
-    else:
-        return "#6B7280"  # Gray
+    if "2022" in str(stage):
+        return "#38bdf8"
+    elif "2023" in str(stage):
+        return "#34d399"
+    elif "2024" in str(stage):
+        return "#fbbf24"
+    elif "2025" in str(stage):
+        return "#fb7185"
+    return "#64748b"
+
 
 @st.cache_data
 def filter_gym_products(df: pd.DataFrame, cache_version: str = "v2") -> pd.DataFrame:
-    """Filter the dataframe to only include Pratham's fitness journey products."""
+    """Filter raw dataframe to only include Pratham's fitness journey products."""
     if df.empty:
         return df
     
-    # Apply journey filter
     journey_mask = df['product_name'].apply(is_gym_related)
     journey_df = df[journey_mask].copy()
     
-    # Remove cancelled/zero value items
     journey_df = journey_df[
         (journey_df['total_owed'] > 0) & 
         (journey_df['order_status'] == 'Closed')
     ].copy()
     
-    # Add journey stage
     journey_df['journey_stage'] = journey_df.apply(
         lambda row: get_journey_stage(row['product_name'], row['order_date']), axis=1
     )
-    
-    # Sort by order date (oldest first to show progression)
     journey_df = journey_df.sort_values('order_date', ascending=True)
     
-    # Remove duplicates - keep only the first purchase of each item type
-    journey_df['item_type'] = journey_df['product_name'].str.lower()
-    
-    # Define item types for deduplication (order matters - more specific first)
     item_types = {
         'replacement ear tips': 'airpods ear tips',
         'polislime': 'airpods ear tips',
@@ -335,7 +385,6 @@ def filter_gym_products(df: pd.DataFrame, cache_version: str = "v2") -> pd.DataF
         'knee sleeves': 'knee sleeves'
     }
     
-    # Map each product to its item type
     def get_item_type(product_name):
         product_lower = product_name.lower()
         for keyword, item_type in item_types.items():
@@ -344,384 +393,287 @@ def filter_gym_products(df: pd.DataFrame, cache_version: str = "v2") -> pd.DataF
         return product_name.lower()
     
     journey_df['item_type'] = journey_df['product_name'].apply(get_item_type)
-    
-    # Keep only the first purchase of each item type (sorted by date)
     journey_df = journey_df.sort_values('order_date', ascending=True)
     journey_df = journey_df.drop_duplicates(subset=['item_type'], keep='first')
-    
-    # Sort by order date (oldest first to show progression)
-    journey_df = journey_df.sort_values('order_date', ascending=True)
-    
-    return journey_df
+    return journey_df.sort_values('order_date', ascending=True)
 
-def create_product_card(product: pd.Series, image_cache: Dict[str, str] = None, 
-                       product_notes: Dict[str, str] = None) -> str:
-    """Create HTML for a product card."""
-    # Get product image from cache
-    image_url = None
-    if image_cache and not pd.isna(product.get('asin')):
-        image_url = image_cache.get(product['asin'])
-    
-    if not image_url:
-        # Use placeholder image
-        product_name_clean = str(product['product_name'])[:20].replace('"', '').replace("'", '')
-        image_url = f"https://via.placeholder.com/300x200/667eea/ffffff?text={product_name_clean}..."
-    
-    # Format price
-    price = product.get('total_owed', product.get('unit_price', 0))
-    if pd.isna(price):
-        price = 0
-    
-    # Format date
-    order_date = product.get('order_date')
-    if pd.notna(order_date):
-        if isinstance(order_date, str):
-            order_date = pd.to_datetime(order_date)
-        date_str = order_date.strftime('%B %d, %Y')
-    else:
-        date_str = "Unknown Date"
-    
-    # Get product note
-    product_id = f"{product.get('asin', '')}_{product.get('order_date', '')}"
-    note = product_notes.get(product_id, "") if product_notes else ""
-    note_display = note if note else "Click to add your reflection on this purchase..."
-    
-    # Get journey stage and color
-    journey_stage = product.get('journey_stage', 'Fitness Journey')
-    stage_color = get_journey_stage_color(journey_stage)
-    
-    # Create card HTML
-    card_html = f"""
-    <div class="product-card">
-        <div style="background: {stage_color}; color: white; padding: 0.5rem; border-radius: 8px 8px 0 0; font-size: 0.9rem; font-weight: 600; text-align: center; margin: -1.5rem -1.5rem 1rem -1.5rem;">
-            {journey_stage}
-        </div>
-        <img src="{image_url}" alt="{product['product_name']}" class="product-image" 
-             onerror="this.src='https://via.placeholder.com/300x200/f3f4f6/6b7280?text=Image+Not+Available'">
-        <div class="product-title">{product['product_name']}</div>
-        <div class="product-price">${price:.2f}</div>
-        <div class="product-date">📅 {date_str}</div>
-        <div class="product-note">
-            <strong>💭 My Reflection:</strong> {note_display}
-        </div>
-    </div>
-    """
-    
-    return card_html
-
-def create_analytics_charts(df: pd.DataFrame) -> None:
-    """Create analytics charts for the gym products."""
-    if df.empty:
-        st.warning("No gym products found to analyze.")
-        return
-    
-    # Spending over time
-    st.subheader("📈 Spending Over Time")
-    
-    # Group by month and year
-    df['month_year'] = df['order_date'].dt.to_period('M')
-    monthly_spending = df.groupby('month_year')['total_owed'].sum().reset_index()
-    monthly_spending['month_year_str'] = monthly_spending['month_year'].astype(str)
-    
-    fig_spending = px.line(
-        monthly_spending, 
-        x='month_year_str', 
-        y='total_owed',
-        title="Monthly Gym Spending",
-        labels={'total_owed': 'Total Spent ($)', 'month_year_str': 'Month'}
-    )
-    fig_spending.update_layout(
-        xaxis_tickangle=-45,
-        height=400,
-        showlegend=False
-    )
-    st.plotly_chart(fig_spending, use_container_width=True)
-    
-    # Product categories (word cloud simulation)
-    st.subheader("🏷️ Most Common Product Categories")
-    
-    # Extract categories from product names
-    all_words = []
-    for product_name in df['product_name'].dropna():
-        words = re.findall(r'\b\w+\b', product_name.lower())
-        # Filter out common words and keep only relevant ones
-        relevant_words = [w for w in words if len(w) > 3 and w not in ['the', 'and', 'for', 'with', 'from', 'this', 'that', 'your', 'will', 'can', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'does', 'did', 'do', 'am', 'is', 'be', 'by', 'on', 'in', 'at', 'to', 'of', 'a', 'an']]
-        all_words.extend(relevant_words)
-    
-    if all_words:
-        word_counts = pd.Series(all_words).value_counts().head(20)
-        
-        fig_categories = px.bar(
-            x=word_counts.values,
-            y=word_counts.index,
-            orientation='h',
-            title="Most Common Words in Product Names",
-            labels={'x': 'Frequency', 'y': 'Word'}
-        )
-        fig_categories.update_layout(height=500)
-        st.plotly_chart(fig_categories, use_container_width=True)
-    
-    # Spending by year
-    st.subheader("📊 Annual Spending Breakdown")
-    
-    yearly_spending = df.groupby('year')['total_owed'].sum().reset_index()
-    
-    fig_yearly = px.bar(
-        yearly_spending,
-        x='year',
-        y='total_owed',
-        title="Total Gym Spending by Year",
-        labels={'total_owed': 'Total Spent ($)', 'year': 'Year'},
-        color='total_owed',
-        color_continuous_scale='Blues'
-    )
-    fig_yearly.update_layout(height=400)
-    st.plotly_chart(fig_yearly, use_container_width=True)
-
-import json
-import os
 
 def load_product_notes() -> Dict[str, str]:
-    """Load product notes from JSON file or return empty dict."""
+    """Load product notes from JSON file."""
     notes_file = 'product_notes.json'
     try:
         if os.path.exists(notes_file):
             with open(notes_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
-    except Exception as e:
-        st.error(f"Error loading notes: {e}")
+    except Exception:
+        pass
     return {}
+
 
 def save_product_note(product_id: str, note: str) -> None:
     """Save a product note to JSON file."""
     notes_file = 'product_notes.json'
     try:
-        # Load existing notes
         notes = load_product_notes()
-        
-        # Update the specific note
         notes[product_id] = note
-        
-        # Save back to file
         with open(notes_file, 'w', encoding='utf-8') as f:
             json.dump(notes, f, indent=2, ensure_ascii=False)
-            
     except Exception as e:
         st.error(f"Error saving note: {e}")
 
-# Note editing is now always available - you can edit product_notes.json directly
+
+# ==============================================================================
+# Curated Dataset & Local Image Asset Pipeline
+# ==============================================================================
+def load_curated_dataset() -> List[Dict]:
+    """
+    Load the clean curated products dataset, always dynamically syncing the latest reflections from product_notes.json.
+    """
+    notes = load_product_notes()
+    curated_path = os.path.join(os.path.dirname(__file__), "data", "curated_products.json")
+    if os.path.exists(curated_path):
+        try:
+            with open(curated_path, "r", encoding="utf-8") as f:
+                items = json.load(f)
+                if items and len(items) == 16:
+                    for it in items:
+                        asin = it.get('asin', '')
+                        ts = it.get('order_timestamp', '')
+                        key = f"{asin}_{ts}"
+                        if key in notes:
+                            it['reflection'] = notes[key]
+                        else:
+                            for k, v in notes.items():
+                                if k.startswith(asin):
+                                    it['reflection'] = v
+                                    break
+                    return items
+        except Exception:
+            pass
+
+    # Fallback to generating directly from CSV + notes
+    csv_file = "Retail.OrderHistory.1.csv"
+    if os.path.exists(csv_file):
+        raw_df = load_and_process_data(csv_file)
+        gym_df = filter_gym_products(raw_df)
+        
+        fallback_items = []
+        for _, r in gym_df.iterrows():
+            asin = r.get('asin', '')
+            od = str(r.get('order_date', ''))
+            note_key = f"{asin}_{od}"
+            img_path = f"assets/products/{asin}.jpg"
+            if os.path.exists(f"assets/products/{asin}.png"):
+                img_path = f"assets/products/{asin}.png"
+                
+            fallback_items.append({
+                "id": str(asin),
+                "product_name": r.get('product_name', ''),
+                "purchase_date": od[:10],
+                "order_timestamp": od,
+                "year": int(r.get('year', 2022)),
+                "category": "Fitness Gear",
+                "price": float(r.get('total_owed', 0.0)),
+                "asin": asin,
+                "image_path": img_path,
+                "reflection": notes.get(note_key, "")
+            })
+        return fallback_items
+
+    return []
+
 
 @st.cache_data
-def filter_products(df: pd.DataFrame, search_term: str, year_range: tuple) -> pd.DataFrame:
-    """Cached function to filter products by search term and year range."""
-    if search_term:
-        mask = df['product_name'].str.contains(search_term, case=False, na=False)
-        filtered = df[mask]
-    else:
-        filtered = df
-    
-    # Apply year filter
-    filtered = filtered[
-        (filtered['year'] >= year_range[0]) & 
-        (filtered['year'] <= year_range[1])
-    ]
-    
-    return filtered
+def get_product_image_src(image_path: str, product_name: str) -> str:
+    """
+    Return base64 data URI of local product image if present,
+    or a clean dark SVG placeholder if the file is missing.
+    NEVER makes network requests at runtime.
+    """
+    if image_path and os.path.exists(image_path) and os.path.getsize(image_path) > 500:
+        try:
+            mime = "image/jpeg"
+            if image_path.lower().endswith(".png"):
+                mime = "image/png"
+            elif image_path.lower().endswith(".webp"):
+                mime = "image/webp"
 
+            with open(image_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
+
+    # Robust local SVG placeholder fallback
+    short_title = (product_name[:24] + "...") if len(product_name) > 24 else product_name
+    safe_title = urllib.parse.quote(short_title)
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200" fill="none">'
+        f'<rect width="300" height="200" fill="#090d16" rx="8"/>'
+        f'<circle cx="150" cy="80" r="32" fill="#1e293b"/>'
+        f'<path d="M136 80h28M140 73v14M160 73v14" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>'
+        f'<text x="150" y="135" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" text-anchor="middle">{safe_title}</text>'
+        f'<text x="150" y="155" fill="#475569" font-family="-apple-system, sans-serif" font-size="10" text-anchor="middle">Milestone Asset</text>'
+        f'</svg>'
+    )
+    return f"data:image/svg+xml;utf8,{svg}"
+
+
+# Chapter Metadata & Narrative Essays
+CHAPTERS = {
+    2022: {
+        "number": "Chapter 01",
+        "title": "Foundation",
+        "theme": "Calisthenics, Home Discipline, and Habit Formation",
+        "css_class": "c-2022",
+        "essay": (
+            "Before stepping foot into a commercial gym or touching a barbell, my fitness journey began in my bedroom. "
+            "I wasn't tracking macros, logging sets, or following rigid lifting splits. Inspired by bodyweight calisthenics, "
+            "I bought push-up parallettes to build baseline upper-body strength and locked in with noise-canceling AirPods Pro. "
+            "Putting those earbuds in and shutting out the world was how I built the daily mental habit of showing up."
+        )
+    },
+    2023: {
+        "number": "Chapter 02",
+        "title": "Building Strength",
+        "theme": "Consistency, Activity Tracking, and Trial by Error",
+        "css_class": "c-2023",
+        "essay": (
+            "The second year was defined by cementing consistency and quantifying daily output. I picked up a rugged "
+            "Casio G-Shock to track daily step targets with reliable accuracy rather than keeping a phone in my pocket. "
+            "While trial purchases like hand grippers and headbands taught me what genuinely contributes to functional "
+            "progress versus what is just gym novelty, the foundation was holding strong."
+        )
+    },
+    2024: {
+        "number": "Chapter 03",
+        "title": "Equipment & Recovery",
+        "theme": "Gym Transitions, Progressive Overload, and Joint Management",
+        "css_class": "c-2024",
+        "essay": (
+            "As training intensity accelerated, workout logistics shifted. Alternating between the campus gym at Michigan "
+            "State University and home breaks at Planet Fitness meant bringing my own dip belt for progressive overload on "
+            "weighted dips and pull-ups. Morning smoothie blending fueled a structured caloric surplus, while elbow compression "
+            "sleeves and weekly weight tracking forced me to balance heavy overload with active joint recovery."
+        )
+    },
+    2025: {
+        "number": "Chapter 04",
+        "title": "Nutrition & Training",
+        "theme": "Nutritional Precision, Pure Overload, and Form Discipline",
+        "css_class": "c-2025",
+        "essay": (
+            "The final phase represents full optimization. Nutrition matured from casual smoothies to disciplined daily "
+            "protein targets with clean plant protein and RXBARs. Adding micronized creatine marked the transition from casual "
+            "training to deliberate sports nutrition. When heavy pressing and hack squats tested joint limits, wrist wraps and "
+            "knee sleeves reinforced the ultimate lesson: progressive overload is meaningless without disciplined form."
+        )
+    }
+}
+
+
+def render_editorial_card(item: Dict, chapter_cls: str) -> str:
+    """Render an editorial card with clickable product image/title and clean reflection."""
+    image_src = get_product_image_src(item.get("image_path", ""), item.get("product_name", ""))
+    
+    # Format date nicely
+    raw_date = item.get("purchase_date", "")
+    try:
+        dt = datetime.strptime(raw_date, "%Y-%m-%d")
+        formatted_date = dt.strftime("%B %d, %Y")
+    except Exception:
+        formatted_date = raw_date
+        
+    name = item.get("product_name", "")
+    reflection = item.get("reflection", "Personal milestone on the journey.")
+    asin = item.get("asin", "")
+    product_link = f"https://www.amazon.com/dp/{asin}" if asin else "#"
+    
+    return f"""
+    <div class="editorial-card {chapter_cls}">
+        <a href="{product_link}" target="_blank" rel="noopener noreferrer" class="img-link" title="View product details">
+            <div class="img-frame">
+                <img src="{image_src}" alt="{name}" loading="lazy"/>
+            </div>
+        </a>
+        <a href="{product_link}" target="_blank" rel="noopener noreferrer" class="title-link">
+            {name} ↗
+        </a>
+        <div class="card-date">Purchased &bull; {formatted_date}</div>
+        <div class="card-reflection-block">
+            "{reflection}"
+        </div>
+    </div>
+    """
+
+
+# ==============================================================================
+# Main Editorial Streamlit View
+# ==============================================================================
 def main():
-    """Main Streamlit application."""
-    
-    # Notes are now stored in product_notes.json file
-    
-    # Header
+    # --------------------------------------------------------------------------
+    # Editorial Hero Section
+    # --------------------------------------------------------------------------
     st.markdown("""
-    <div class="main-header">
-        <h1>💪 My Fitness Journey — Through Amazon Orders</h1>
-        <p>From AirPods Pro to Creatine: 4 Years of Transformation (2022-2025)</p>
-        <p style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">16 key purchases that tell the story of my fitness evolution</p>
+    <div class="editorial-hero">
+        <div class="hero-kicker">FITNESS TIMELINE &bull; 2022–2026</div>
+        <h1>From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression</h1>
+        <p class="narrative-lead">
+            A four-year fitness journey told through tangible milestones.
+            When workout logs and macro spreadsheets weren't kept in a database,
+            the physical gear and nutrition I committed my student budget to
+            became the authentic record of my progression.
+        </p>
+        <div class="hero-byline">
+            <span>Written & Curated by <strong>Pratham Pradhan</strong></span>
+            <span>&bull;</span>
+            <a href="https://prathampradhan.dev" target="_blank" rel="noopener noreferrer">prathampradhan.dev ↗</a>
+            <span>&bull;</span>
+            <span>16 Curated Milestones</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Load data
-    csv_file = "Retail.OrderHistory.1.csv"
-    if not os.path.exists(csv_file):
-        st.error(f"❌ CSV file '{csv_file}' not found. Please ensure the file is in the project root.")
+
+    # --------------------------------------------------------------------------
+    # Load Dataset
+    # --------------------------------------------------------------------------
+    all_products = load_curated_dataset()
+    if not all_products:
+        st.error("No product dataset found. Please ensure data/curated_products.json or Retail.OrderHistory.1.csv exists.")
         return
-    
-    with st.spinner("🔄 Loading and processing data..."):
-        df = load_and_process_data(csv_file)
-    
-    if df.empty:
-        st.error("❌ No data loaded. Please check your CSV file.")
-        return
-    
-    # Filter gym products
-    gym_df = filter_gym_products(df, "v2")
-    
-    if gym_df.empty:
-        st.warning("🏃‍♂️ No gym-related products found in your order history. Try adjusting the keyword filters.")
-        return
-    
-    # Sidebar filters
-    st.sidebar.markdown("## 🔍 Filters")
-    
-    # Year range filter
-    min_year = int(gym_df['year'].min()) if not gym_df.empty else 2022
-    max_year = int(gym_df['year'].max()) if not gym_df.empty else 2025
-    
-    year_range = st.sidebar.slider(
-        "📅 Year Range",
-        min_value=min_year,
-        max_value=max_year,
-        value=(min_year, max_year),
-        step=1
-    )
-    
-    # Search filter (auto-search as you type)
-    st.sidebar.markdown("🔍 **Search Products**")
-    
-    # Add CSS to hide the "Press Enter to apply" text
-    st.markdown("""
-    <style>
-    .stTextInput > div > div > div > div > small,
-    .stTextInput small,
-    [data-testid="stTextInput"] small {
-        display: none !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    search_term = st.sidebar.text_input(
-        "Search Products", 
-        placeholder="Enter product name...", 
-        key="search_input",
-        help="Search automatically as you type",
-        label_visibility="collapsed"
-    )
-    
-    # Apply filters using cached function for better performance
-    filtered_df = filter_products(gym_df, search_term, year_range)
-    
-    # Stats cards
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
+
+    # --------------------------------------------------------------------------
+    # Chronological Editorial Chapters (2022 -> 2025)
+    # --------------------------------------------------------------------------
+    for yr in [2022, 2023, 2024, 2025]:
+        ch = CHAPTERS[yr]
+        year_items = [x for x in all_products if x.get("year") == yr]
+        
+        if not year_items:
+            continue
+
+        # Chapter Header & Narrative Essay
         st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-number">{len(filtered_df)}</div>
-            <div class="stat-label">Total Products</div>
+        <div class="chapter-container {ch['css_class']}">
+            <div class="chapter-meta">
+                <span class="chapter-number">{ch['number']} &bull; {yr}</span>
+            </div>
+            <h2 class="chapter-heading">{ch['title']}</h2>
+            <div class="chapter-theme">{ch['theme']}</div>
+            <p class="chapter-essay">{ch['essay']}</p>
         </div>
         """, unsafe_allow_html=True)
-    
-    with col2:
-        total_spent = filtered_df['total_owed'].sum()
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-number">${total_spent:.0f}</div>
-            <div class="stat-label">Total Spent</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        avg_price = filtered_df['total_owed'].mean()
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-number">${avg_price:.0f}</div>
-            <div class="stat-label">Avg Price</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        unique_products = filtered_df['product_name'].nunique()
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-number">{unique_products}</div>
-            <div class="stat-label">Unique Items</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Main content tabs
-    tab1, tab2 = st.tabs(["🛍️ My Fitness Journey Timeline", "📊 Analytics"])
-    
-    with tab1:
-        if filtered_df.empty:
-            st.info("No products match your current filters. Try adjusting the year range or search term.")
-        else:
-            # Journey progression overview
-            st.markdown("### 🗺️ Journey Overview")
-            
-            # Group by journey stage
-            journey_stages = filtered_df.groupby('journey_stage').size().reset_index(name='count')
-            
-            col1, col2, col3, col4 = st.columns(4)
-            
-            # Define the 4 journey stages in order
-            stages = [
-                "🏗️ Foundation (2022)",
-                "💪 Building Strength (2023)", 
-                "🛠️ Equipment & Recovery (2024)",
-                "🥤 Nutrition & Training (2025)"
-            ]
-            
-            for i, stage in enumerate(stages):
-                with [col1, col2, col3, col4][i]:
-                    # Get count for this stage from the data
-                    count = journey_stages[journey_stages['journey_stage'] == stage]['count'].iloc[0] if stage in journey_stages['journey_stage'].values else 0
-                    stage_color = get_journey_stage_color(stage)
-                    st.markdown(f"""
-                    <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border-left: 4px solid {stage_color}; margin-bottom: 1rem;">
-                        <h4 style="margin: 0 0 0.5rem 0; color: #1f2937;">{stage}</h4>
-                        <p style="margin: 0.5rem 0 0 0; font-weight: 600; color: {stage_color};">{count} items</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            st.markdown("---")
-            # Initialize Rainforest API if available
-            rainforest_api = None
-            image_cache = {}
-            if RainforestAPI:
-                try:
-                    rainforest_api = RainforestAPI()
-                    # Pre-load all images in batch for better performance
-                    asins = [row.get('asin') for _, row in filtered_df.iterrows() if not pd.isna(row.get('asin'))]
-                    if asins:
-                        progress_bar = st.progress(0)
-                        status_text = st.empty()
-                        
-                        status_text.text("🖼️ Loading product images...")
-                        image_cache = rainforest_api.get_multiple_product_images(asins)
-                        
-                        progress_bar.progress(1.0)
-                        status_text.text("✅ Images loaded!")
-                        
-                        # Clear the progress indicators after a short delay
-                        import time
-                        time.sleep(0.5)
-                        progress_bar.empty()
-                        status_text.empty()
-                except:
-                    st.warning("⚠️ Rainforest API not configured. Using placeholder images.")
-            
-            # Load product notes
-            product_notes = load_product_notes()
-            
-            # Note editing is always available
-            
-            # Create product cards
-            st.markdown('<div class="product-grid">', unsafe_allow_html=True)
-            
-            for idx, product in filtered_df.iterrows():
-                card_html = create_product_card(product, image_cache, product_notes)
+
+        # Product Cards: 2-column balanced grid
+        cols = st.columns(2)
+        for idx, item in enumerate(year_items):
+            col_target = cols[idx % 2]
+            with col_target:
+                card_html = render_editorial_card(item, ch['css_class'])
                 st.markdown(card_html, unsafe_allow_html=True)
-                
-                # Notes are managed via product_notes.json file
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-    
-    with tab2:
-        create_analytics_charts(filtered_df)
-    
-    
+                st.markdown("<div style='height: 1.25rem;'></div>", unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
+
