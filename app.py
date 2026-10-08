@@ -1,5 +1,5 @@
 """
-From AirPods Pro to Creatine: 4 Years of Transformation (2022–2025)
+From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression (2022–2026)
 An Editorial Fitness Journey Case Study
 
 Author: Pratham Pradhan (prathampradhan.dev)

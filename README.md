@@ -1,4 +1,4 @@
-# ⚡ From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression (2022–2025)
+# ⚡ From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression (2022–2026)
 
 A personal portfolio project by [Pratham Pradhan](https://prathampradhan.dev) visualizing a 4-year fitness evolution using real Amazon order history as a proxy for progression and discipline.
 
@@ -13,12 +13,12 @@ A personal portfolio project by [Pratham Pradhan](https://prathampradhan.dev) vi
 
 When lifts, daily macros, and step counts weren't consistently tracked in a dedicated workout app, physical equipment and nutritional purchases became the authentic proxy for my journey.
 
-Between 2022 and 2025, 16 key purchases on a student budget traced the shift from home calisthenics and habit building to weighted overload, injury management, and sports nutrition:
+Between 2022 and 2026, 16 key purchases on a student budget traced the shift from home calisthenics and habit building to weighted overload, injury management, and sports nutrition:
 
 ```
 Amazon Order Data (Retail.OrderHistory.1.csv)
        ↓
-Curated Fitness Milestones (16 items spanning 2022–2025)
+Curated Fitness Milestones (16 items spanning 2022–2026)
        ↓
 Local Product Metadata & Reflections (data/curated_products.json)
        ↓
