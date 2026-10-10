@@ -1,5 +1,5 @@
 """
-From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression (2022–2026)
+From Calisthenics to Heavy Lifts: My 5-Year Fitness Progression (2022–2026)
 An Editorial Fitness Journey Case Study
 
 Author: Pratham Pradhan (prathampradhan.dev)
@@ -20,7 +20,7 @@ from typing import List, Dict, Optional
 # Page Configuration
 # ==============================================================================
 st.set_page_config(
-    page_title="From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression",
+    page_title="From Calisthenics to Heavy Lifts: My 5-Year Fitness Progression",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -251,6 +251,62 @@ st.markdown("""
         font-style: italic;
     }
 
+    .editorial-card .title-static {
+        font-size: 1.12rem;
+        font-weight: 700;
+        color: #f8fafc;
+        line-height: 1.4;
+        margin: 0 0 0.4rem 0;
+        display: inline-block;
+    }
+
+    .editorial-card .static-frame {
+        width: 100%;
+        height: 210px;
+        background: #07090f;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+
+    .editorial-card .static-frame img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+        transition: transform 0.3s ease;
+    }
+
+    .editorial-card:hover .static-frame img {
+        transform: scale(1.04);
+    }
+
+    .source-badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        background: rgba(167, 139, 250, 0.14);
+        color: #c4b5fd;
+        border: 1px solid rgba(167, 139, 250, 0.28);
+        margin-right: 0.45rem;
+    }
+
+    .source-badge-amazon {
+        background: rgba(56, 189, 248, 0.1);
+        color: #7dd3fc;
+        border-color: rgba(56, 189, 248, 0.22);
+    }
+
     /* Chapter Accents */
     .c-2022 .chapter-number, .c-2022 a.title-link:hover { color: #38bdf8; }
     .c-2022 .card-reflection-block { border-left-color: #38bdf8; }
@@ -263,6 +319,9 @@ st.markdown("""
 
     .c-2025 .chapter-number, .c-2025 a.title-link:hover { color: #fb7185; }
     .c-2025 .card-reflection-block { border-left-color: #fb7185; }
+
+    .c-2026 .chapter-number, .c-2026 a.title-link:hover { color: #a78bfa; }
+    .c-2026 .card-reflection-block { border-left-color: #a78bfa; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -324,6 +383,8 @@ def get_journey_stage(product_name: str, order_date: pd.Timestamp) -> str:
         return "🛠️ Equipment & Recovery (2024)"
     elif year == 2025:
         return "🥤 Nutrition & Training (2025)"
+    elif year == 2026:
+        return "⚡ Sustained Progression (2026)"
     return f"Fitness Journey ({year})"
 
 
@@ -337,6 +398,8 @@ def get_journey_stage_color(stage: str) -> str:
         return "#fbbf24"
     elif "2025" in str(stage):
         return "#fb7185"
+    elif "2026" in str(stage):
+        return "#a78bfa"
     return "#64748b"
 
 
@@ -435,14 +498,18 @@ def load_curated_dataset() -> List[Dict]:
         try:
             with open(curated_path, "r", encoding="utf-8") as f:
                 items = json.load(f)
-                if items and len(items) == 16:
+                if items:
                     for it in items:
-                        asin = it.get('asin', '')
-                        ts = it.get('order_timestamp', '')
-                        key = f"{asin}_{ts}"
-                        if key in notes:
-                            it['reflection'] = notes[key]
-                        else:
+                        asin = it.get('asin') or ''
+                        ts = it.get('order_timestamp') or ''
+                        item_id = it.get('id') or ''
+                        
+                        # Sync latest reflection from notes if available
+                        if asin and ts and f"{asin}_{ts}" in notes:
+                            it['reflection'] = notes[f"{asin}_{ts}"]
+                        elif item_id and item_id in notes:
+                            it['reflection'] = notes[item_id]
+                        elif asin:
                             for k, v in notes.items():
                                 if k.startswith(asin):
                                     it['reflection'] = v
@@ -563,35 +630,73 @@ CHAPTERS = {
         "theme": "Nutritional Precision, Pure Overload, and Form Discipline",
         "css_class": "c-2025",
         "essay": (
-            "The final phase represents full optimization. Nutrition matured from casual smoothies to disciplined daily "
+            "The fourth phase represents full optimization. Nutrition matured from casual smoothies to disciplined daily "
             "protein targets with clean plant protein and RXBARs. Adding micronized creatine marked the transition from casual "
             "training to deliberate sports nutrition. When heavy pressing and hack squats tested joint limits, wrist wraps and "
             "knee sleeves reinforced the ultimate lesson: progressive overload is meaningless without disciplined form."
+        )
+    },
+    2026: {
+        "number": "Chapter 05",
+        "title": "Sustained Progression & Bulk Fuel",
+        "theme": "Costco Wholesale Staples, Daily Energy, and Long-Term Lifestyle",
+        "css_class": "c-2026",
+        "essay": (
+            "Entering 2026, training progression shifted from trial-and-error experimentation to repeatable lifestyle habits and bulk nutritional efficiency. "
+            "Transitioning away from one-off online orders, weekly Costco runs became the primary fuel pipeline: grabbing 40-count boxes of protein bars for daily macros, "
+            "electrolyte mixes for intense session hydration, and quick-digesting simple carbs like Rice Krispies Treats for immediate intra-workout pump and glycogen replenishment."
         )
     }
 }
 
 
+def clean_html(raw_html: str) -> str:
+    """
+    Remove all leading indentation from each line.
+    Markdown interprets 4 or more leading spaces as an indented code block (<pre><code>).
+    Stripping leading spaces ensures HTML renders as intended DOM elements.
+    """
+    lines = [line.strip() for line in raw_html.strip().splitlines() if line.strip()]
+    return "\n".join(lines)
+
+
 def render_editorial_card(item: Dict, chapter_cls: str) -> str:
-    """Render an editorial card with clickable product image/title and clean reflection."""
+    """Render an editorial card with clickable product image/title (if link/ASIN present) and clean reflection."""
     image_src = get_product_image_src(item.get("image_path", ""), item.get("product_name", ""))
     
     # Format date nicely
     raw_date = item.get("purchase_date", "")
-    try:
-        dt = datetime.strptime(raw_date, "%Y-%m-%d")
-        formatted_date = dt.strftime("%B %d, %Y")
-    except Exception:
-        formatted_date = raw_date
+    formatted_date = raw_date
+    if raw_date:
+        for fmt in ("%Y-%m-%d", "%Y-%m", "%B %Y", "%b %Y"):
+            try:
+                dt = datetime.strptime(raw_date, fmt)
+                if fmt in ("%Y-%m", "%B %Y", "%b %Y"):
+                    formatted_date = dt.strftime("%B %Y")
+                else:
+                    formatted_date = dt.strftime("%B %d, %Y")
+                break
+            except ValueError:
+                continue
         
     name = item.get("product_name", "")
-    reflection = item.get("reflection", "Personal milestone on the journey.")
-    asin = item.get("asin", "")
-    product_link = f"https://www.amazon.com/dp/{asin}" if asin else "#"
-    
-    return f"""
-    <div class="editorial-card {chapter_cls}">
-        <a href="{product_link}" target="_blank" rel="noopener noreferrer" class="img-link" title="View product details">
+    reflection = item.get("reflection", "")
+    asin = item.get("asin")
+    url = item.get("url")
+    source = item.get("source", "Amazon" if asin else "Retail")
+
+    # Determine product link without broken URLs or missing-ASIN issues
+    if asin and str(asin).strip():
+        product_link = f"https://www.amazon.com/dp/{str(asin).strip()}"
+    elif url and str(url).strip():
+        product_link = str(url).strip()
+    else:
+        product_link = None
+
+    # Render image frame & title with or without link
+    if product_link:
+        img_and_title = f"""
+        <a href="{product_link}" target="_blank" rel="noopener noreferrer" class="img-link" title="View {name}">
             <div class="img-frame">
                 <img src="{image_src}" alt="{name}" loading="lazy"/>
             </div>
@@ -599,12 +704,38 @@ def render_editorial_card(item: Dict, chapter_cls: str) -> str:
         <a href="{product_link}" target="_blank" rel="noopener noreferrer" class="title-link">
             {name} ↗
         </a>
-        <div class="card-date">Purchased &bull; {formatted_date}</div>
-        <div class="card-reflection-block">
-            "{reflection}"
+        """
+    else:
+        img_and_title = f"""
+        <div class="static-frame">
+            <img src="{image_src}" alt="{name}" loading="lazy"/>
         </div>
+        <div class="title-static">
+            {name}
+        </div>
+        """
+
+    # Source & Date metadata line
+    badge_cls = "source-badge-amazon" if str(source).lower() == "amazon" else "source-badge"
+    meta_line = f'<div class="card-date"><span class="{badge_cls}">{source}</span> &bull; {formatted_date}</div>'
+
+    # Reflection block (only render if reflection is non-empty)
+    reflection_html = ""
+    if reflection and reflection.strip():
+        reflection_html = f"""
+        <div class="card-reflection-block">
+            "{reflection.strip()}"
+        </div>
+        """
+
+    raw_card = f"""
+    <div class="editorial-card {chapter_cls}">
+        {img_and_title}
+        {meta_line}
+        {reflection_html}
     </div>
     """
+    return clean_html(raw_card)
 
 
 # ==============================================================================
@@ -612,14 +743,24 @@ def render_editorial_card(item: Dict, chapter_cls: str) -> str:
 # ==============================================================================
 def main():
     # --------------------------------------------------------------------------
+    # Load Dataset
+    # --------------------------------------------------------------------------
+    all_products = load_curated_dataset()
+    if not all_products:
+        st.error("No product dataset found. Please ensure data/curated_products.json or Retail.OrderHistory.1.csv exists.")
+        return
+
+    milestone_count = len(all_products)
+
+    # --------------------------------------------------------------------------
     # Editorial Hero Section
     # --------------------------------------------------------------------------
-    st.markdown("""
+    st.markdown(clean_html(f"""
     <div class="editorial-hero">
         <div class="hero-kicker">FITNESS TIMELINE &bull; 2022–2026</div>
-        <h1>From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression</h1>
+        <h1>From Calisthenics to Heavy Lifts: My 5-Year Fitness Progression</h1>
         <p class="narrative-lead">
-            A four-year fitness journey told through tangible milestones.
+            A five-year fitness journey told through tangible milestones.
             When workout logs and macro spreadsheets weren't kept in a database,
             the physical gear and nutrition I committed my student budget to
             became the authentic record of my progression.
@@ -629,31 +770,26 @@ def main():
             <span>&bull;</span>
             <a href="https://prathampradhan.dev" target="_blank" rel="noopener noreferrer">prathampradhan.dev ↗</a>
             <span>&bull;</span>
-            <span>16 Curated Milestones</span>
+            <span>{milestone_count} Curated Milestones</span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # Load Dataset
+    # Chronological Editorial Chapters (2022 -> 2026)
     # --------------------------------------------------------------------------
-    all_products = load_curated_dataset()
-    if not all_products:
-        st.error("No product dataset found. Please ensure data/curated_products.json or Retail.OrderHistory.1.csv exists.")
-        return
-
-    # --------------------------------------------------------------------------
-    # Chronological Editorial Chapters (2022 -> 2025)
-    # --------------------------------------------------------------------------
-    for yr in [2022, 2023, 2024, 2025]:
-        ch = CHAPTERS[yr]
+    for yr in [2022, 2023, 2024, 2025, 2026]:
+        ch = CHAPTERS.get(yr)
+        if not ch:
+            continue
+            
         year_items = [x for x in all_products if x.get("year") == yr]
         
         if not year_items:
             continue
 
         # Chapter Header & Narrative Essay
-        st.markdown(f"""
+        st.markdown(clean_html(f"""
         <div class="chapter-container {ch['css_class']}">
             <div class="chapter-meta">
                 <span class="chapter-number">{ch['number']} &bull; {yr}</span>
@@ -662,7 +798,7 @@ def main():
             <div class="chapter-theme">{ch['theme']}</div>
             <p class="chapter-essay">{ch['essay']}</p>
         </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
 
         # Product Cards: 2-column balanced grid
         cols = st.columns(2)
@@ -676,4 +812,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

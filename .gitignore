@@ -60,9 +60,10 @@ image_cache.json
 # User notes (commented out to allow deployment)
 # product_notes.json
 
-# Data files (keep example but ignore personal data)
+# Data files & personal order history exports
 *.csv
-!Retail.OrderHistory.1.csv
+*OrderHistory*
+*Order History*
 
 # Logs
 *.log

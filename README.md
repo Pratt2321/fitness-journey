@@ -1,6 +1,6 @@
-# ⚡ From Calisthenics to Heavy Lifts: My 4-Year Fitness Progression (2022–2026)
+# ⚡ From Calisthenics to Heavy Lifts: My 5-Year Fitness Progression (2022–2026)
 
-A personal portfolio project by [Pratham Pradhan](https://prathampradhan.dev) visualizing a 4-year fitness evolution using real Amazon order history as a proxy for progression and discipline.
+A personal portfolio project by [Pratham Pradhan](https://prathampradhan.dev) visualizing a 5-year fitness evolution using real Amazon and Costco order history as a proxy for progression and discipline.
 
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.63.0-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -13,12 +13,12 @@ A personal portfolio project by [Pratham Pradhan](https://prathampradhan.dev) vi
 
 When lifts, daily macros, and step counts weren't consistently tracked in a dedicated workout app, physical equipment and nutritional purchases became the authentic proxy for my journey.
 
-Between 2022 and 2026, 16 key purchases on a student budget traced the shift from home calisthenics and habit building to weighted overload, injury management, and sports nutrition:
+Between 2022 and 2026, 28 key purchases across Amazon and Costco on a student budget traced the shift from home calisthenics and habit building to weighted overload, injury management, sports nutrition, and Costco wholesale fuel:
 
 ```
-Amazon Order Data (Retail.OrderHistory.1.csv)
+Amazon & Costco Order Data (Private Raw Exports)
        ↓
-Curated Fitness Milestones (16 items spanning 2022–2026)
+Curated Fitness Milestones (28 items spanning 2022–2026)
        ↓
 Local Product Metadata & Reflections (data/curated_products.json)
        ↓
@@ -29,7 +29,7 @@ Story-First Streamlit Web App (app.py)
 
 ---
 
-## 🗺️ The Four Chapters
+## 🗺️ The Five Chapters
 
 1. **Chapter 1: 2022 — Foundation**  
    *Calisthenics, Home Workouts, and Building the Habit.*  
@@ -45,13 +45,18 @@ Story-First Streamlit Web App (app.py)
 
 4. **Chapter 4: 2025 — Nutrition & Training**  
    *Supplementation, Protein Precision, and Form-First Discipline.*  
-   Daily protein targets with Orgain and RXBARs, micronized creatine, wrist support for heavy pressing, and knee sleeves after hack squat lessons.
+   Daily protein targets with Orgain and RXBARs, micronized creatine, wrist support for heavy pressing, knee sleeves, and injury recovery with Icy Hot, Vitamin D3/K2, and Magnesium Glycinate.
+
+5. **Chapter 5: 2026 — Sustained Progression & Bulk Fuel**  
+   *Costco Wholesale Staples, Micronutrient Precision, and Long-Term Lifestyle.*  
+   Wholesale protein bars, electrolyte hydration, intra-workout Rice Krispies Treats, whey protein, essential vitamins, and targeted joint compression gear.
 
 ---
 
 ## ✨ Architecture & Features
 
-- **Story First → Data Second**: Chronological narrative chapters paired with personal retrospective reflections on *why* each purchase mattered.
+- **Story First → Data Second**: Chronological narrative chapters paired with personal retrospective reflections on *why* each purchase mattered across 28 milestones.
+- **Amazon & Costco Coverage**: Captures both e-commerce workout gear and wholesale bulk nutrition staples.
 - **Local Image Asset Pipeline**: High-resolution, authentic product images stored locally in `assets/products/`. Zero external API calls at runtime.
 - **Graceful Fallback**: Inline dark SVG placeholders render seamlessly if any image asset is ever missing.
 - **Curated Dataset Schema**: Clean, structured metadata in `data/curated_products.json` (`id`, `product_name`, `purchase_date`, `year`, `category`, `price`, `asin`, `image_path`, `reflection`).
@@ -74,7 +79,7 @@ pip install -r requirements.txt
 ```bash
 python3 scripts/image_fetcher.py
 ```
-*(All 16 product images are already pre-downloaded and stored in `assets/products/`.)*
+*(All 28 product images are already pre-downloaded and stored in `assets/products/`.)*
 
 ### 3. Run Tests
 ```bash
@@ -85,7 +90,6 @@ python3 test_app.py
 ```bash
 streamlit run app.py
 ```
-Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 ---
 
@@ -94,13 +98,12 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 ```
 fitness-journey/
 ├── assets/
-│   └── products/                  # Local authentic product photography (16 items)
+│   └── products/                  # Local authentic product photography (28 items)
 ├── data/
-│   └── curated_products.json      # Structured curated metadata & reflections
+│   └── curated_products.json      # Structured curated metadata & reflections (28 milestones)
 ├── scripts/
 │   └── image_fetcher.py           # Offline utility to populate local product images
-├── Retail.OrderHistory.1.csv      # Raw Amazon order history export
-├── product_notes.json             # Personal purchase reflections keyed by ASIN & timestamp
+├── product_notes.json             # Personal purchase reflections & qualitative notes
 ├── app.py                         # Story-first Streamlit web application
 ├── test_app.py                    # Complete test suite
 ├── requirements.txt               # Dependencies
